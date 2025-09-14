@@ -1,0 +1,1 @@
+add to a file : renamed.txt : this content is newly added

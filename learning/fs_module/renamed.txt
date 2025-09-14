@@ -1,0 +1,3 @@
+
+this content is added from the command file
+this content is newly added

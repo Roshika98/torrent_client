@@ -3,8 +3,14 @@ const { Buffer } = require("buffer");
 
 (async () => {
 	const commandfile = await filehandler.open("./command.txt", "r");
-
 	const watcher = filehandler.watch("./command.txt");
+
+	process.on("SIGINT", async () => {
+		console.log("closing commandfile");
+
+		await commandfile.close();
+		process.exit();
+	});
 
 	for await (const event of watcher) {
 		if (event.eventType === "change") {
@@ -27,11 +33,14 @@ const { Buffer } = require("buffer");
 
 			// create a file:
 			if (fileContent.includes("create a file")) {
-				const path = fileContent.substring("create a file " + 1);
+				const path = fileContent.split(":")[1].trim();
 				try {
 					const existingFile = await filehandler.open(path, "r");
+					console.log("file already exists");
+					await existingFile.close();
 				} catch (error) {
-					const newfile = await filehandler.open(`${path}.txt`, "w");
+					const newfile = await filehandler.open(`${path}`, "w");
+					await newfile.close();
 				}
 			}
 
@@ -62,9 +71,26 @@ const { Buffer } = require("buffer");
 					console.log("file does not exist");
 				}
 			}
+
+			// add to a file:
+			if (fileContent.includes("add to a file")) {
+				const paths = fileContent.split(":");
+				const path = paths[1].trim();
+				const contentToAdd = paths[2].trim();
+
+				try {
+					const file = await filehandler.open(path, "a");
+					await file.appendFile(`\n${contentToAdd}`);
+					await file.close();
+				} catch (error) {
+					console.log("error adding to file");
+				}
+			}
 		}
 
 		if (event.eventType === "rename") {
 		}
 	}
 })();
+
+
