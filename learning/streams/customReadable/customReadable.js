@@ -28,5 +28,14 @@ class ReadStream extends Readable {
 			}
 			this.push(bytesRead > 0 ? buffer.subarray(0, bytesRead) : null);
 		});
-	}
+    }
+    
+    _destroy(err, callback) {
+        if (this.fd) {
+            fs.close(this.fd, (closeErr) => {
+               callback(closeErr || err);
+            });
+        }
+        else callback(err);
+    }
 }
